@@ -2,6 +2,12 @@
 /**
  * @file
  * Main module file.
+ *
+ * DISCLAIMER. MODIFY AT YOUR OWN RISK.
+ * THIS MODULE PROVEN TO BE VERY UNSTABLE IN TERMS OF DOING WHAT
+ * IS WAS INTENDED TO DO.
+ *
+ * BAD COMMITERS SHALL BE SHOT ON SIGHT.
  */
 
 // Define reviews per page
@@ -603,7 +609,7 @@ function ding_voxb_rating($type = 'ajax', $isbn_number = NULL, $rating = 0) {
         $r = NULL;
 
         if ($record_id == NULL) {
-          $r = $item->rateItem($isbn_number, $rating * 20, $_SESSION['voxb']['userId']);
+          $r = $item->rateItem($isbn_number, $rating * 20, $_SESSION['voxb']['userId'], $_SESSION['voxb']['aliasName']);
         }
         else {
           $r = $item->updateRateItem($record_id['voxbIdentifier'], $rating * 20);
@@ -670,6 +676,7 @@ function ding_voxb_details() {
 
   if ($r) {
     $response['status'] = TRUE;
+
     for ($i = 0; $i < $items->getCount(); $i++) {
       $item = $items->getItem($request[$i]);
 

@@ -70,27 +70,38 @@ class VoxbItems extends VoxbBase {
     );
 
     $this->reviews = new VoxbReviewsController();
-    try {
-      $o = $this->call('fetchData', $data);
 
-      if (!empty($o->Body->fetchDataResponse->totalItemData)) {
-        foreach ($o->Body->fetchDataResponse->totalItemData as $k => $v) {
+    $o = $this->call('fetchData', $data);
+
+    if(!empty($o->error)) {
+      ding_voxb_log(WATCHDOG_ERROR, 'IDs: @ids. Error: @error',
+        array('ids' => $ids, 'error' => $o->error)
+      );
+
+      return FALSE;
+    }
+
+    if (!empty($o->totalItemData)) {
+      if (is_array($o->totalItemData)) {
+        $id = NULL;
+
+        foreach ($o->totalItemData as $k => $v) {
           $id = (string) $v->fetchData->objectIdentifierValue;
+
           $this->items[$id] = new VoxbItem();
           $this->items[$id]->addReviewHandler('review', new VoxbReviews());
           $this->items[$id]->fetchData($v);
         }
       }
-      elseif(!empty($o->Body->fetchDataResponse->error)) {
-        ding_voxb_log(WATCHDOG_ERROR, 'IDs: @ids. Error: @error',
-          array('ids' => $ids, 'error' => $o->Body->fetchDataResponse->error)
-        );
-        return FALSE;
+      else {
+        $id = (string) $o->totalItemData->fetchData->objectIdentifierValue;
+
+        $this->items[$id] = new VoxbItem();
+        $this->items[$id]->addReviewHandler('review', new VoxbReviews());
+        $this->items[$id]->fetchData($o->totalItemData);
       }
     }
-    catch (Exception $e) {
-      return FALSE;
-    }
+
     return TRUE;
   }
 

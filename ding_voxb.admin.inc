@@ -6,7 +6,7 @@
  */
 
 /**
- * Form builder for the VoxB settings form.
+ * Settings form.
  */
 function ding_voxb_admin($form, $form_state) {
   $form = array();
@@ -19,7 +19,7 @@ function ding_voxb_admin($form, $form_state) {
   $form['voxb']['voxb_service_url'] = array(
     '#type' => 'textfield',
     '#title' => t('Service URL'),
-    '#description' => t('URL to the VoxB webservice, e.g. https://voxb.addi.dk/1.0/'),
+    '#description' => t('URL to the VoxB webservice, e.g. https://voxb.addi.dk/1.1/voxb.wsdl'),
     '#default_value' => variable_get('voxb_service_url', ''),
     '#required' => TRUE,
   );
@@ -32,12 +32,12 @@ function ding_voxb_admin($form, $form_state) {
     '#default_value' => variable_get('voxb_identity_provider', ''),
   );
 
-  $form['voxb']['voxb_institution_name'] = array(
+  $form['voxb']['voxb_institution_id'] = array(
     '#type' => 'textfield',
-    '#title' => t('Institution name'),
-    '#description' => t('Institution name for the service, e.g. Testbibliotek'),
+    '#title' => t('Institution id'),
+    '#description' => t('Institution id, e.g. 1'),
     '#required' => TRUE,
-    '#default_value' => variable_get('voxb_institution_name', ''),
+    '#default_value' => variable_get('voxb_institution_id', ''),
   );
 
   $form['voxb']['voxb_reviews_per_page'] = array(
@@ -61,12 +61,24 @@ function ding_voxb_admin($form, $form_state) {
 }
 
 /**
- * Form submit handler.
+ * Custom validation handler for settings form.
  *
- * @param type $form
- * @param type $form_state
+ * @see ding_voxb_admin(),
  */
-function ding_voxb_admin_submit($form, $form_state) {
+function ding_voxb_admin_validate($form, &$form_state) {
+  $input = $form_state['input'];
+
+  if (!is_numeric($input['voxb_institution_id'])) {
+    form_set_error('voxb_institution_id', t('This field requires a numeric value.'));
+  }
+}
+
+/**
+ * Custom validation handler for settings form.
+ *
+ * @see ding_voxb_admin(),
+ */
+function ding_voxb_admin_submit($form, &$form_state) {
   drupal_set_message(t('You must log out to changes take effect'), 'warning');
 
   // Clear all item list cache.
