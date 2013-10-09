@@ -104,20 +104,16 @@ class VoxbProfile extends VoxbBase {
         'userIdentifierValue' => $this->cpr,
         'userIdentifierType' => 'CPR',
         'identityProvider' => $identityProvider,
-        'institutionName' => $institutionName,
+        'institutionId' => 1,
       ),
     );
 
-    try {
-      $response = $this->call('createUser', $params);
+    $response = $this->call('createUser', $params);
 
-      if (isset($response->Body->createUserResponse->userId)) {
-        $this->userId = (int) $response->Body->createUserResponse->userId;
-        return TRUE;
-      }
-    }
-    catch (Exception $e) {
-      // Return false anyway.
+    if (!empty($response->userId)) {
+      $this->userId = (int) $response->userId;
+
+      return TRUE;
     }
 
     ding_voxb_log(
@@ -180,35 +176,32 @@ class VoxbProfile extends VoxbBase {
    * @return array
    */
   private function getActedItems() {
-    try {
-      $response = $this->call('fetchMyData', array('userId' => $this->userId));
+    $response = $this->call('fetchMyData', array('userId' => $this->userId));
 
-      if (!isset($response->Body->fetchMyDataResponse->result)) {
-        ding_voxb_log(
-          WATCHDOG_DEBUG,
-          __METHOD__ . ': No results for userId: @user',
-          array('@user' => $this->userId)
+    if (!empty($response->error)) {
+      ding_voxb_log(
+        WATCHDOG_DEBUG,
+        __METHOD__ . ': No results for userId: @user',
+        array('@user' => $this->userId)
+      );
+
+      return FALSE;
+    }
+
+    foreach ($response->result as $v) {
+      if ($v->object && $v->object->objectIdentifierType == 'ISBN') {
+        $this->actedItems[(string) $v->object->objectIdentifierValue] = array(
+          'voxbIdentifier' => (string) $v->voxbIdentifier,
+          'tags' => @$v->item->tags ? $this->prepareArray($v->item->tags->tag) : array(),
+          'review' => array(
+            'title' => (string) @$v->item->review->reviewTitle,
+            'data' => (string) @$v->item->review->reviewData,
+          ),
+          'rating' => (int) @$v->item->rating,
         );
-        return array();
       }
+    }
 
-      foreach ($response->Body->fetchMyDataResponse->result as $v) {
-        if ($v->object && $v->object->objectIdentifierType == 'ISBN') {
-          $this->actedItems[(string) $v->object->objectIdentifierValue] = array(
-            'voxbIdentifier' => (string) $v->voxbIdentifier,
-            'tags' => @$v->item->tags ? $this->prepareArray($v->item->tags->tag) : array(),
-            'review' => array(
-              'title' => (string) @$v->item->review->reviewTitle,
-              'data' => (string) @$v->item->review->reviewData,
-            ),
-            'rating' => (int) @$v->item->rating,
-          );
-        }
-      }
-    }
-    catch (Exception $e) {
-      return array();
-    }
     return $this->actedItems;
   }
 

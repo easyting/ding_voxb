@@ -43,15 +43,17 @@ class VoxbItem extends VoxbBase {
       'output' => array('contentType' => 'all'),
     );
 
-    try {
-      $o = $this->call('fetchData', $data);
 
-      if ($o->Body->fetchDataResponse->totalItemData) {
-        $this->fetchData($o->Body->fetchDataResponse->totalItemData);
-      }
-    }
-    catch (Exception $e) {
+    $o = $this->call('fetchData', $data);
+
+    if (!empty($o->error)) {
+      ding_voxb_log(WATCHDOG_ERROR, $o->error);
+
       return FALSE;
+    }
+
+    if ($o->totalItemData) {
+      $this->fetchData($o->totalItemData);
     }
 
     return TRUE;
@@ -70,17 +72,18 @@ class VoxbItem extends VoxbBase {
       ),
       'output' => array('contentType' => 'all')
     );
+
     $this->reviews = new VoxbReviewsController($this->reviewHandlers);
+    $o = $this->call('fetchData', $data);
 
-    try {
-      $o = $this->call('fetchData', $data);
+    if (!empty($o->error)) {
+      ding_voxb_log(WATCHDOG_ERROR, $o->error);
 
-      if ($o->Body->fetchDataResponse->totalItemData) {
-        $this->fetchData($o->Body->fetchDataResponse->totalItemData);
-      }
-    }
-    catch (Exception $e) {
       return FALSE;
+    }
+
+    if ($o->totalItemData) {
+      $this->fetchData($o->totalItemData);
     }
 
     return TRUE;
@@ -151,24 +154,22 @@ class VoxbItem extends VoxbBase {
    * @param integer $rating (0 to 100)
    * @param integer $userId
    */
-  public function rateItem($isbn, $rating, $userId) {
-    try {
-      $response = $this->call('createMyData', array(
-        'userId' => $userId,
-        'item' => array(
-          'rating' => $rating,
-        ),
-        'object' => array(
-          'objectIdentifierValue' => $isbn,
-          'objectIdentifierType' => 'ISBN',
-        ),
-      ));
+  public function rateItem($isbn, $rating, $userId, $userName) {
+    $response = $this->call('createMyData', array(
+      'userId' => $userId,
+      'item' => array(
+        'rating' => $rating,
+      ),
+      'object' => array(
+        'objectContributors' => $userName,
+        'objectIdentifierValue' => $isbn,
+        'objectIdentifierType' => 'ISBN',
+      ),
+    ));
 
-      if (isset($response->Body->createMyDataResponse->error)) {
-        ding_voxb_log(WATCHDOG_ERROR, $response->Body->createMyDataResponse->error);
-      }
-    }
-    catch (Exception $e) {
+    if (!empty($response->error)) {
+      ding_voxb_log(WATCHDOG_ERROR, $response->error);
+
       return FALSE;
     }
 
@@ -182,15 +183,16 @@ class VoxbItem extends VoxbBase {
    * @param $rating
    */
   public function updateRateItem($record_id, $rating) {
-    try {
-      $response = $this->call('updateMyData', array(
-        'voxbIdentifier' => $record_id,
-        'item' => array(
-          'rating' => $rating,
-        ),
-      ));
-    }
-    catch (Exception $e) {
+    $response = $this->call('updateMyData', array(
+      'voxbIdentifier' => $record_id,
+      'item' => array(
+        'rating' => $rating,
+      ),
+    ));
+
+    if (!empty($response->error)) {
+      ding_voxb_log(WATCHDOG_ERROR, $response->error);
+
       return FALSE;
     }
 
