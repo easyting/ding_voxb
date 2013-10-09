@@ -26,6 +26,11 @@ class VoxbBase {
    * Constructor initialize $this->soapClient attribute.
    */
   private function __construct() {
+    $service_url = variable_get('voxb_service_url', '');
+    if (empty($service_url)) {
+      return FALSE;
+    }
+
     $options = array(
       'soap_version' => SOAP_1_2,
       'exceptions' => TRUE,
@@ -66,9 +71,10 @@ class VoxbBase {
    * @param array $data
    */
   public function call($method, $data) {
+
     if (VoxbBase::$soapClient == NULL) {
       ding_voxb_log(WATCHDOG_ERROR, 'No SOAP client');
-      throw new Exception();
+      return FALSE;
     }
 
     try {
@@ -84,8 +90,6 @@ class VoxbBase {
         "Calling @method returned error: @error",
         array('@method' => $method, '@error' => $e->getMessage())
       );
-
-      throw new Exception();
     }
 
     return $response;

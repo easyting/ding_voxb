@@ -23,7 +23,6 @@ class VoxbLogin {
    *   Global user object.
    */
   public function login($account) {
-
     // VoxB has limit of name by 32 characters,
     // ding providers puts in name long hash,
     // so we shorterning it by rehashing.

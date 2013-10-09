@@ -90,8 +90,12 @@ function ding_voxb_permission() {
  * Invokes methos to select user information from Voxb
  */
 function ding_voxb_user_login($edit, $account) {
-  $obj = new VoxbLogin();
-  $obj->login($account);
+  $service_url = variable_get('voxb_service_url', '');
+
+  if (!empty($service_url)) {
+    $obj = new VoxbLogin();
+    $obj->login($account);
+  }
 }
 
 /**
