@@ -13,7 +13,7 @@
       Drupal.voxb_item.details = e.items;
       $.each(e.items, function(k, v) {
         var ele = $('.voxb-details.isbn-' + k);
-        ele.find('.rating:lt(' + Math.round(v.rating / 20) + ')').removeClass('star-off').addClass('star-on');
+        ele.find('.voxb-rating .rating:lt(' + Math.round(v.rating / 20) + ')').removeClass('star-off').addClass('star-on');
         if (v.rating_count > 0) {
           ele.find('.rating-count span').html('(' + v.rating_count + ')');
         }

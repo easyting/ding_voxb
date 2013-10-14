@@ -23,13 +23,12 @@ class VoxbLogin {
    *   Global user object.
    */
   public function login($account) {
-
     // VoxB has limit of name by 32 characters,
     // ding providers puts in name long hash,
     // so we shorterning it by rehashing.
     $name = md5($account->name);
     $obj = new VoxbUser();
-    $voxb_user_object = $obj->getUserBySSN($name, variable_get('voxb_identity_provider', ''), variable_get('voxb_institution_name', ''));
+    $voxb_user_object = $obj->getUserBySSN($name, variable_get('voxb_identity_provider', ''), variable_get('voxb_institution_id', ''));
 
     if ($voxb_user_object) {
       /**
@@ -38,6 +37,7 @@ class VoxbLogin {
        */
 
       $profiles = $obj->getProfiles();
+
       $_SESSION['voxb']['userId'] = $profiles[0]->getUserId();
       $_SESSION['voxb']['aliasName'] = $profiles[0]->getAliasName();
       //Fetch user actions and put serialized profile object into session
@@ -68,8 +68,10 @@ class VoxbLogin {
         $profile->fetchMyData();
 
         $_SESSION['voxb']['profile'] = serialize($profile);
+
         return TRUE;
       }
+
       return FALSE;
     }
   }
@@ -86,10 +88,12 @@ class VoxbLogin {
     $obj->setCpr($cpr);
     $obj->setAliasName($aliasName);
     $obj->setProfileLink($profileLink);
-    if ($obj->createUser(variable_get('voxb_identity_provider', ''), variable_get('voxb_institution_name', ''))) {
+
+    if ($obj->createUser(variable_get('voxb_identity_provider', ''), variable_get('voxb_institution_id', ''))) {
       // User successfully created
       return $obj->getUserId();
     }
+
     return 0;
   }
 }
