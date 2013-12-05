@@ -118,8 +118,8 @@ class VoxbProfile extends VoxbBase {
 
     ding_voxb_log(
       WATCHDOG_WARNING,
-      "VoxB failed to create user with: <pre>@params</pre>",
-      array('@params' => $params)
+      "VoxB failed to create user with aliasName: @name",
+      array('@name' => $this->aliasName)
     );
 
     return FALSE;
