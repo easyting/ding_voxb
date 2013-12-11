@@ -1,8 +1,8 @@
 <?php
 /**
  * @file
- *
  * Base VoxB-client class.
+ *
  * Singleton class, supports connection to VoxB server.
  */
 
@@ -22,13 +22,25 @@ class VoxbBase {
    */
   public static $soapClient = NULL;
 
+  protected $serviceVersion;
+
   /**
    * Constructor initialize $this->soapClient attribute.
    */
   private function __construct() {
     $service_url = variable_get('voxb_service_url', '');
+
     if (empty($service_url)) {
       return FALSE;
+    }
+
+    $url = parse_url($service_url);
+    $url = explode('/', $url['path']);
+    foreach ($url as $part) {
+      if (preg_match('/([0-9]+\.[0-9]+)/', $part)) {
+        $this->serviceVersion = $part;
+        break;
+      }
     }
 
     $options = array(
@@ -68,13 +80,19 @@ class VoxbBase {
    * Use this method to call VoxB server methods.
    *
    * @param string $method
+   *   Method name.
    * @param array $data
+   *   Data to be passed to method.
+   *
+   * @return mixed
+   *   Service response.
    */
   public function call($method, $data) {
+    $response = FALSE;
 
     if (VoxbBase::$soapClient == NULL) {
       ding_voxb_log(WATCHDOG_ERROR, 'No SOAP client');
-      return FALSE;
+      return $response;
     }
 
     try {
@@ -96,9 +114,19 @@ class VoxbBase {
   }
 
   /**
-   * Check if the service is available
+   * Check if the service is available.
    */
   public function isServiceAvailable() {
     return (VoxbBase::$soapClient == NULL ? FALSE : TRUE);
+  }
+
+  /**
+   * Get service version.
+   *
+   * @return string
+   *   Service version.
+   */
+  public function getVersion() {
+    return $this->serviceVersion;
   }
 }

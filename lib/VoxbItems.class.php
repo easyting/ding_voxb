@@ -9,59 +9,71 @@
  */
 class VoxbItems extends VoxbBase {
 
-  private $items = array();
+  protected $items = array();
+  protected $reviews;
+  protected $reviewHandlers = array();
 
+  /**
+   * Create VoxbItems object.
+   */
   public function __construct() {
     parent::getInstance();
   }
 
   /**
-   * Fetch multiple items with one request by list of faust numbers.
+   * Get VoxB data by FAUST identifiers.
    *
-   * @param string $faustNum
-   *   Item faust number
-   * @param bool $multiple
-   *   Whether to send a multiple request
+   * @param array $faust_nums
+   *   FAUST numbers of items.
+   *
+   * @return bool
+   *   TRUE in case of success.
+   *   FALSE if an error occurred.
    */
-  public function fetchByFaust($faustNums) {
-    return $this->fetchBy_($faustNums, 'FAUST');
+  public function fetchByFaust($faust_nums) {
+    return $this->fetchBy($faust_nums, 'FAUST');
   }
 
   /**
    * Get VoxB data by ISBN identifiers.
    *
    * @param array $ids
-   *   ISNB numbers of items.
+   *   ISBN numbers of items.
    *
    * @return bool
    *   TRUE in case of success.
    *   FALSE if an error occurred.
    */
   public function fetchByISBN($ids) {
-    return $this->fetchBy_($ids, 'ISBN');
+    return $this->fetchBy($ids, 'ISBN');
   }
 
   /**
    * Fetch VoxB data for items.
+   *
    * @param array $ids
    *   See voxb:objectIdentifierValue.
    * @param string $type
    *   See voxb:objectIdentifierType.
    *
-   * @return boolean
+   * @return bool
    *   TRUE in case of success.
    *   FALSE if an error occurred.
    */
-  protected function fetchBy_($ids, $type) {
+  protected function fetchBy($ids, $type) {
     $fetch = array();
     $type = strtoupper($type);
     $ids = array_unique($ids);
 
     foreach ($ids as $id) {
-      $fetch[] = array(
+      $item = array(
         'objectIdentifierValue' => $id,
-        'objectIdentifierType'  => $type,
+        'objectIdentifierType' => $type,
       );
+      if (self::$instance->getVersion() == '1.2') {
+        $item['institutionId'] = variable_get('voxb_institution_id', '');
+      }
+      $fetch[] = $item;
     }
 
     $data = array(
@@ -73,9 +85,11 @@ class VoxbItems extends VoxbBase {
 
     $o = $this->call('fetchData', $data);
 
-    if(!empty($o->error)) {
-      ding_voxb_log(WATCHDOG_ERROR, 'IDs: @ids. Error: @error',
-        array('ids' => $ids, 'error' => $o->error)
+    if (!empty($o->error)) {
+      ding_voxb_log(
+        WATCHDOG_ERROR,
+        'IDs: @ids. Error: @error',
+        array('@ids' => implode(',', $ids), '@error' => $o->error)
       );
 
       return FALSE;
@@ -85,20 +99,24 @@ class VoxbItems extends VoxbBase {
       if (is_array($o->totalItemData)) {
         $id = NULL;
 
-        foreach ($o->totalItemData as $k => $v) {
+        foreach ($o->totalItemData as $v) {
           $id = (string) $v->fetchData->objectIdentifierValue;
 
-          $this->items[$id] = new VoxbItem();
-          $this->items[$id]->addReviewHandler('review', new VoxbReviews());
-          $this->items[$id]->fetchData($v);
+          $item = new VoxbItem();
+          $item->addReviewHandler('review', new VoxbReviews());
+          $item->fetchData($v);
+
+          $this->items[$id] = $item;
         }
       }
       else {
         $id = (string) $o->totalItemData->fetchData->objectIdentifierValue;
 
-        $this->items[$id] = new VoxbItem();
-        $this->items[$id]->addReviewHandler('review', new VoxbReviews());
-        $this->items[$id]->fetchData($o->totalItemData);
+        $item = new VoxbItem();
+        $item->addReviewHandler('review', new VoxbReviews());
+        $item->fetchData($o->totalItemData);
+
+        $this->items[$id] = $item;
       }
     }
 
@@ -106,12 +124,13 @@ class VoxbItems extends VoxbBase {
   }
 
   /**
-   * Getter function. Returns voxbItem object by its identifier.
+   * Get VoxbItem object by its identifier.
    *
    * @param string $id
    *   Object identifier.
    *
    * @return object|bool
+   *   VoxbItem object or FALSE.
    */
   public function getItem($id) {
     if (isset($this->items[$id])) {
@@ -122,19 +141,22 @@ class VoxbItems extends VoxbBase {
   }
 
   /**
-   * Get amount of items in the layer
+   * Get amount of items in the layer.
    *
-   * @return integer
+   * @return int
+   *   Number of items.
    */
   public function getCount() {
     return count($this->items);
   }
 
   /**
-   * Add review handlers to factory
+   * Add review handlers to factory.
    *
    * @param string $name
+   *   Handler name.
    * @param object $object
+   *   Object.
    */
   public function addReviewHandler($name, $object) {
     $this->reviewHandlers[$name] = $object;
