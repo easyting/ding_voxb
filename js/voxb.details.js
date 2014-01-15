@@ -26,6 +26,14 @@
         }
       });
     }
+
+    // Hide empty VoxB fields.
+    var voxb_fields = $('.field-name-voxb-rating').each(function(){
+      var $this = $(this);
+      if ($this.find('a.rating').length == 0) {
+        $this.hide();
+      }
+    });
   };
 
   Drupal.behaviors.voxb_details = {
@@ -37,7 +45,7 @@
       });
 
       $('.ting-cover', context).each(function(i, e) {
-        id = Drupal.extractTingId(e);
+        var id = Drupal.extractTingId(e);
 
         if (id != undefined && id != 0) {
           item_ids.push(id);
