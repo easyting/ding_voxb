@@ -71,6 +71,7 @@ class VoxbBase {
    * @param array $data
    */
   public function call($method, $data) {
+    $response = FALSE;
 
     if (VoxbBase::$soapClient == NULL) {
       ding_voxb_log(WATCHDOG_ERROR, 'No SOAP client');
