@@ -22,7 +22,7 @@ class VoxbReviews extends VoxbBase implements Iterator, Countable {
        * Select only reviews that are marked as review
        * This line can be changes, depends on the changes done on the server side
        */
-      if ($v->review->reviewTitle == 'review') {
+      if (isset($v->review) && $v->review->reviewTitle == 'review') {
         $this->items[] = new VoxbReviewRecord($v);
       }
     }
