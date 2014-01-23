@@ -119,8 +119,8 @@ class VoxbItem extends VoxbBase {
     }
 
     // Fetch Rating
-    $this->rating = (int) $o->totalRatings->averageRating;
-    $this->ratingCount = (int) $o->totalRatings->totalNumberOfRaters;
+    $this->rating = (int) (isset($o->totalRatings->averageRating) ? $o->totalRatings->averageRating : 0);
+    $this->ratingCount = (int) (isset($o->totalRatings->totalNumberOfRaters) ? $o->totalRatings->totalNumberOfRaters : 0);
   }
 
   /**

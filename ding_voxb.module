@@ -940,7 +940,10 @@ function ding_voxb_log($severity, $message, array $variables = array()) {
   $logging = variable_get('voxb_logging', 0);
   // Log only if enabled.
   if ($logging) {
-    watchdog('voxb', $message, $variables, $severity);
+    // Include trace in messages.
+    $e = new Exception();
+    $variables = array_merge($variables, array('!trace' => nl2br("\n" . $e->getTraceAsString())));
+    watchdog('voxb', $message . '!trace', $variables, $severity);
   }
 }
 
