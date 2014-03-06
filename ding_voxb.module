@@ -940,7 +940,10 @@ function ding_voxb_log($severity, $message, array $variables = array()) {
   $logging = variable_get('voxb_logging', 0);
   // Log only if enabled.
   if ($logging) {
-    watchdog('voxb', $message, $variables, $severity);
+    // Include trace in messages.
+    $e = new Exception();
+    $variables = array_merge($variables, array('!trace' => nl2br("\n" . $e->getTraceAsString())));
+    watchdog('voxb', $message . '!trace', $variables, $severity);
   }
 }
 
@@ -950,11 +953,11 @@ function ding_voxb_log($severity, $message, array $variables = array()) {
 function ding_voxb_requirements($phase) {
   if ($phase == 'runtime') {
     $service_uri = trim(variable_get('voxb_service_url', NULL), '/');
-    if ($service_uri != trim('https://voxb.addi.dk/1.0/', '/')) {
+    if ($service_uri != trim('https://voxb.addi.dk/1.1/', '/')) {
       return array('ding_voxb' =>
         array(
           'title' => t('VoxB module'),
-          'value' => t('Version 1.0 of voxb.addi.dk service is required (https://voxb.addi.dk/1.0/)'),
+          'value' => t('Version 1.1 of voxb.addi.dk service is required (https://voxb.addi.dk/1.1/voxb.wsdl)'),
           'severity' => REQUIREMENT_ERROR,
         ),
       );

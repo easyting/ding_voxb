@@ -108,15 +108,19 @@ class VoxbItem extends VoxbBase {
 
     // Fetch Tags
     $this->tags = new VoxbTags();
-    $this->tags->fetch($o->summaryTags);
+    if (isset($o->summaryTags)) {
+      $this->tags->fetch($o->summaryTags);
+    }
 
     // Fetch Reviews
     $this->reviews = new VoxbReviewsController($this->reviewHandlers);
-    $this->reviews->fetch($o->userItems);
+    if (isset($o->userItems)) {
+      $this->reviews->fetch($o->userItems);
+    }
 
     // Fetch Rating
-    $this->rating = (int) $o->totalRatings->averageRating;
-    $this->ratingCount = (int) $o->totalRatings->totalNumberOfRaters;
+    $this->rating = (int) (isset($o->totalRatings->averageRating) ? $o->totalRatings->averageRating : 0);
+    $this->ratingCount = (int) (isset($o->totalRatings->totalNumberOfRaters) ? $o->totalRatings->totalNumberOfRaters : 0);
   }
 
   /**
